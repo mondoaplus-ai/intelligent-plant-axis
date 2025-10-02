@@ -89,6 +89,7 @@ const menuItems: MenuItem[] = [
     icon: Settings,
     path: '/cadastros',
     submenu: [
+      { title: 'Produtos', icon: Package, path: '/cadastros/produtos' },
       { title: 'Empresas', icon: Building2, path: '/cadastros/empresas' },
       { title: 'Usuários', icon: UserCog, path: '/cadastros/usuarios' },
       { title: 'Parâmetros', icon: Sliders, path: '/cadastros/parametros' },
