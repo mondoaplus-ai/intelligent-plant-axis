@@ -25,38 +25,40 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          {/* Dashboard */}
-          <Route path="/" element={<Layout><Index /></Layout>} />
-          
-          {/* Produção */}
-          <Route path="/producao/ordens" element={<Layout><PlaceholderPage title="Ordens de Produção" /></Layout>} />
-          <Route path="/producao/apontamentos" element={<Layout><PlaceholderPage title="Apontamentos" /></Layout>} />
-          <Route path="/producao/engenharia" element={<Layout><PlaceholderPage title="Engenharia de Produto" /></Layout>} />
-          
-          {/* Comercial */}
-          <Route path="/comercial/pedidos" element={<Layout><PlaceholderPage title="Pedidos" /></Layout>} />
-          <Route path="/comercial/clientes" element={<Layout><PlaceholderPage title="Clientes" /></Layout>} />
-          <Route path="/comercial/precos" element={<Layout><PlaceholderPage title="Tabela de Preços" /></Layout>} />
-          
-          {/* Estoque */}
-          <Route path="/estoque/movimentacoes" element={<Layout><PlaceholderPage title="Movimentações" /></Layout>} />
-          <Route path="/estoque/inventario" element={<Layout><PlaceholderPage title="Inventário" /></Layout>} />
-          <Route path="/estoque/produtos" element={<Layout><PlaceholderPage title="Produtos" /></Layout>} />
-          
-          {/* IA Produtiva */}
-          <Route path="/ia/sequenciamento" element={<Layout><PlaceholderPage title="Otimização de Sequenciamento" /></Layout>} />
-          <Route path="/ia/qualidade" element={<Layout><PlaceholderPage title="Previsão de Qualidade" /></Layout>} />
-          <Route path="/ia/insights" element={<Layout><PlaceholderPage title="Insights Automáticos" /></Layout>} />
-          
-          {/* Cadastros */}
-          <Route path="/cadastros/empresas" element={<Layout><PlaceholderPage title="Empresas" /></Layout>} />
-          <Route path="/cadastros/usuarios" element={<Layout><PlaceholderPage title="Usuários" /></Layout>} />
-          <Route path="/cadastros/parametros" element={<Layout><PlaceholderPage title="Parâmetros" /></Layout>} />
-          
-          {/* 404 */}
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
+        <Layout>
+          <Routes>
+            {/* Dashboard */}
+            <Route path="/" element={<Index />} />
+            
+            {/* Produção */}
+            <Route path="/producao/ordens" element={<PlaceholderPage title="Ordens de Produção" />} />
+            <Route path="/producao/apontamentos" element={<PlaceholderPage title="Apontamentos" />} />
+            <Route path="/producao/engenharia" element={<PlaceholderPage title="Engenharia de Produto" />} />
+            
+            {/* Comercial */}
+            <Route path="/comercial/pedidos" element={<PlaceholderPage title="Pedidos" />} />
+            <Route path="/comercial/clientes" element={<PlaceholderPage title="Clientes" />} />
+            <Route path="/comercial/precos" element={<PlaceholderPage title="Tabela de Preços" />} />
+            
+            {/* Estoque */}
+            <Route path="/estoque/movimentacoes" element={<PlaceholderPage title="Movimentações" />} />
+            <Route path="/estoque/inventario" element={<PlaceholderPage title="Inventário" />} />
+            <Route path="/estoque/produtos" element={<PlaceholderPage title="Produtos" />} />
+            
+            {/* IA Produtiva */}
+            <Route path="/ia/sequenciamento" element={<PlaceholderPage title="Otimização de Sequenciamento" />} />
+            <Route path="/ia/qualidade" element={<PlaceholderPage title="Previsão de Qualidade" />} />
+            <Route path="/ia/insights" element={<PlaceholderPage title="Insights Automáticos" />} />
+            
+            {/* Cadastros */}
+            <Route path="/cadastros/empresas" element={<PlaceholderPage title="Empresas" />} />
+            <Route path="/cadastros/usuarios" element={<PlaceholderPage title="Usuários" />} />
+            <Route path="/cadastros/parametros" element={<PlaceholderPage title="Parâmetros" />} />
+            
+            {/* 404 */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </Layout>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
