@@ -144,7 +144,7 @@ export const ProductModal = ({ open, onClose, product }: ProductModalProps) => {
   const showSuppliersTab = formData.type === 'Comprado' || formData.type === 'Revenda';
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">
