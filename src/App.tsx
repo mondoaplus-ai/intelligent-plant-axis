@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
+import ProductionOrders from "./pages/ProductionOrders";
 import NotFoundPage from "./pages/NotFoundPage";
 
 const queryClient = new QueryClient();
@@ -32,7 +33,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             
             {/* Produção */}
-            <Route path="/producao/ordens" element={<PlaceholderPage title="Ordens de Produção" />} />
+            <Route path="/producao/ordens" element={<ProductionOrders />} />
             <Route path="/producao/apontamentos" element={<PlaceholderPage title="Apontamentos" />} />
             <Route path="/producao/engenharia" element={<PlaceholderPage title="Engenharia de Produto" />} />
             
