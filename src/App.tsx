@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Products from "./pages/Products";
 import ProductionOrders from "./pages/ProductionOrders";
 import Appointments from "./pages/Appointments";
+import Customers from "./pages/Customers";
 import NotFoundPage from "./pages/NotFoundPage";
 
 const queryClient = new QueryClient();
@@ -40,7 +41,7 @@ const App = () => (
             
             {/* Comercial */}
             <Route path="/comercial/pedidos" element={<PlaceholderPage title="Pedidos" />} />
-            <Route path="/comercial/clientes" element={<PlaceholderPage title="Clientes" />} />
+            <Route path="/comercial/clientes" element={<Customers />} />
             <Route path="/comercial/precos" element={<PlaceholderPage title="Tabela de Preços" />} />
             
             {/* Estoque */}
