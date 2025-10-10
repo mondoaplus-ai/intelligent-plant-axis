@@ -1,53 +1,85 @@
 import { motion } from 'framer-motion';
-import { TrendingUp, Zap, ShoppingBag, Brain } from 'lucide-react';
+import { TrendingUp, Zap, ShoppingBag, Package } from 'lucide-react';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
+import { ProductionOrder } from '@/types/productionOrder';
+import { Order } from '@/types/order';
+import { Customer } from '@/types/customer';
+import { Product } from '@/types/product';
 
-const kpis = [
-  {
-    title: 'Produção Hoje',
-    value: '847',
-    unit: 'unidades',
-    change: '+12%',
-    comparison: 'vs ontem',
-    icon: TrendingUp,
-    color: 'success',
-    bgGradient: 'from-success/10 to-success/5',
-  },
-  {
-    title: 'Eficiência OEE',
-    value: '78.5',
-    unit: '%',
-    change: '+3.2%',
-    comparison: 'vs média',
-    icon: Zap,
-    color: 'primary',
-    bgGradient: 'from-primary/10 to-primary/5',
-  },
-  {
-    title: 'Pedidos Pendentes',
-    value: '124',
-    unit: 'pedidos',
-    change: 'R$ 1.2M',
-    comparison: 'em valor',
-    icon: ShoppingBag,
-    color: 'warning',
-    bgGradient: 'from-warning/10 to-warning/5',
-  },
-  {
-    title: 'IA Ativa',
-    value: '3',
-    unit: 'otimizações',
-    change: 'rodando',
-    comparison: 'agora',
-    icon: Brain,
-    color: 'accent',
-    bgGradient: 'from-accent/20 to-accent/10',
-    pulse: true,
-  },
-];
+interface KPICardsProps {
+  productionOrders: ProductionOrder[];
+  salesOrders: Order[];
+  customers: Customer[];
+  products: Product[];
+}
 
-export const KPICards = () => {
+export const KPICards = ({ productionOrders, salesOrders, customers, products }: KPICardsProps) => {
+  // Calcular métricas reais
+  const activeProductionOrders = productionOrders.filter(o => 
+    o.status === 'Produzindo' || o.status === 'Em Setup'
+  ).length;
+  
+  const avgEfficiency = productionOrders
+    .filter(o => o.efficiency)
+    .reduce((acc, o) => acc + (o.efficiency || 0), 0) / productionOrders.filter(o => o.efficiency).length || 0;
+  
+  const pendingSalesOrders = salesOrders.filter(o => 
+    o.status === 'orcamento' || o.status === 'aprovado' || o.status === 'producao'
+  ).length;
+  
+  const pendingValue = salesOrders
+    .filter(o => o.status === 'orcamento' || o.status === 'aprovado' || o.status === 'producao')
+    .reduce((sum, o) => sum + o.total, 0);
+    
+  const lowStockProducts = products.filter(p => 
+    p.currentStock <= p.minStock && p.status === 'Ativo'
+  ).length;
+
+  const kpis = [
+    {
+      title: 'Produção Ativa',
+      value: activeProductionOrders.toString(),
+      unit: 'ordens',
+      change: `${productionOrders.length} total`,
+      comparison: 'ordens cadastradas',
+      icon: TrendingUp,
+      color: 'success',
+      bgGradient: 'from-success/10 to-success/5',
+    },
+    {
+      title: 'Eficiência Média',
+      value: avgEfficiency.toFixed(1),
+      unit: '%',
+      change: 'OEE',
+      comparison: 'das ordens',
+      icon: Zap,
+      color: 'primary',
+      bgGradient: 'from-primary/10 to-primary/5',
+    },
+    {
+      title: 'Pedidos Pendentes',
+      value: pendingSalesOrders.toString(),
+      unit: 'pedidos',
+      change: `R$ ${(pendingValue / 1000).toFixed(0)}K`,
+      comparison: 'em valor',
+      icon: ShoppingBag,
+      color: 'warning',
+      bgGradient: 'from-warning/10 to-warning/5',
+    },
+    {
+      title: 'Estoque Baixo',
+      value: lowStockProducts.toString(),
+      unit: 'produtos',
+      change: 'atenção',
+      comparison: 'necessária',
+      icon: Package,
+      color: 'accent',
+      bgGradient: 'from-accent/20 to-accent/10',
+      pulse: lowStockProducts > 0,
+    },
+  ];
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {kpis.map((kpi, index) => (

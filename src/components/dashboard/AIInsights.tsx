@@ -2,37 +2,13 @@ import { motion } from 'framer-motion';
 import { Card } from '../ui/card';
 import { Brain, AlertTriangle, CheckCircle, Target, Lightbulb } from 'lucide-react';
 import { Badge } from '../ui/badge';
+import { ProductionOrder } from '@/types/productionOrder';
+import { Order } from '@/types/order';
 
-const insights = [
-  {
-    icon: AlertTriangle,
-    title: 'OP #1847 pode atrasar 2h',
-    description: 'Sugestão: Antecipar setup máquina 3',
-    type: 'warning',
-    priority: 'high',
-  },
-  {
-    icon: CheckCircle,
-    title: 'Sequenciamento otimizado',
-    description: '-18% tempo de setup hoje',
-    type: 'success',
-    priority: 'medium',
-  },
-  {
-    icon: Target,
-    title: 'Qualidade prevista: 96.8%',
-    description: 'Acima da meta de 95%',
-    type: 'success',
-    priority: 'medium',
-  },
-  {
-    icon: Lightbulb,
-    title: 'IA detectou padrão',
-    description: 'Produção 12% melhor entre 14-18h',
-    type: 'info',
-    priority: 'low',
-  },
-];
+interface AIInsightsProps {
+  productionOrders: ProductionOrder[];
+  salesOrders: Order[];
+}
 
 const typeColors = {
   warning: 'warning',
@@ -40,7 +16,55 @@ const typeColors = {
   info: 'accent',
 };
 
-export const AIInsights = () => {
+export const AIInsights = ({ productionOrders, salesOrders }: AIInsightsProps) => {
+  // Calcular insights reais
+  const delayedOrders = productionOrders.filter(o => {
+    if (o.status === 'Concluída') return false;
+    return new Date(o.expectedEndDate) < new Date();
+  }).length;
+  
+  const avgEfficiency = productionOrders
+    .filter(o => o.efficiency)
+    .reduce((acc, o) => acc + (o.efficiency || 0), 0) / productionOrders.filter(o => o.efficiency).length || 0;
+    
+  const pendingSalesOrders = salesOrders.filter(o => 
+    o.status === 'aprovado' || o.status === 'orcamento'
+  ).length;
+  
+  const aiOptimizedOrders = productionOrders.filter(o => o.aiOptimized).length;
+
+  const insights = [
+    {
+      icon: CheckCircle,
+      title: 'Eficiência Média',
+      description: `A eficiência média da produção está em ${avgEfficiency.toFixed(1)}%`,
+      type: avgEfficiency >= 80 ? 'success' : 'warning',
+      priority: avgEfficiency >= 80 ? 'medium' : 'high',
+    },
+    {
+      icon: AlertTriangle,
+      title: delayedOrders > 0 ? 'Ordens Atrasadas' : 'Produção no Prazo',
+      description: delayedOrders > 0 
+        ? `${delayedOrders} ordem(ns) de produção com prazo vencido` 
+        : 'Todas as ordens de produção estão dentro do prazo',
+      type: delayedOrders > 0 ? 'warning' : 'success',
+      priority: delayedOrders > 0 ? 'high' : 'medium',
+    },
+    {
+      icon: Target,
+      title: 'Pedidos Pendentes',
+      description: `${pendingSalesOrders} pedido(s) aguardando aprovação ou processamento`,
+      type: pendingSalesOrders > 5 ? 'warning' : 'info',
+      priority: pendingSalesOrders > 5 ? 'high' : 'low',
+    },
+    {
+      icon: Lightbulb,
+      title: 'IA Otimizando',
+      description: `${aiOptimizedOrders} ordem(ns) otimizadas por inteligência artificial`,
+      type: 'info',
+      priority: 'low',
+    },
+  ];
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
