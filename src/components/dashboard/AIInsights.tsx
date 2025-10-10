@@ -17,21 +17,25 @@ const typeColors = {
 };
 
 export const AIInsights = ({ productionOrders, salesOrders }: AIInsightsProps) => {
+  // Garantir que os arrays não sejam undefined
+  const safeProductionOrders = productionOrders || [];
+  const safeSalesOrders = salesOrders || [];
+  
   // Calcular insights reais
-  const delayedOrders = productionOrders.filter(o => {
+  const delayedOrders = safeProductionOrders.filter(o => {
     if (o.status === 'Concluída') return false;
     return new Date(o.expectedEndDate) < new Date();
   }).length;
   
-  const avgEfficiency = productionOrders
+  const avgEfficiency = safeProductionOrders
     .filter(o => o.efficiency)
-    .reduce((acc, o) => acc + (o.efficiency || 0), 0) / productionOrders.filter(o => o.efficiency).length || 0;
+    .reduce((acc, o) => acc + (o.efficiency || 0), 0) / safeProductionOrders.filter(o => o.efficiency).length || 0;
     
-  const pendingSalesOrders = salesOrders.filter(o => 
+  const pendingSalesOrders = safeSalesOrders.filter(o => 
     o.status === 'aprovado' || o.status === 'orcamento'
   ).length;
   
-  const aiOptimizedOrders = productionOrders.filter(o => o.aiOptimized).length;
+  const aiOptimizedOrders = safeProductionOrders.filter(o => o.aiOptimized).length;
 
   const insights = [
     {

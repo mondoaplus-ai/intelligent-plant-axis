@@ -30,7 +30,8 @@ const getStatusColor = (status: ProductionOrderStatus) => {
 };
 
 export const ActiveOrdersTable = ({ productionOrders }: ActiveOrdersTableProps) => {
-  const activeOrders = productionOrders
+  const safeOrders = productionOrders || [];
+  const activeOrders = safeOrders
     .filter(o => o.status === 'Produzindo' || o.status === 'Em Setup' || o.status === 'Pausada')
     .slice(0, 5);
   return (

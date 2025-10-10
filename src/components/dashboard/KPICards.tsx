@@ -15,24 +15,29 @@ interface KPICardsProps {
 }
 
 export const KPICards = ({ productionOrders, salesOrders, customers, products }: KPICardsProps) => {
+  // Garantir que os arrays não sejam undefined
+  const safeProductionOrders = productionOrders || [];
+  const safeSalesOrders = salesOrders || [];
+  const safeProducts = products || [];
+  
   // Calcular métricas reais
-  const activeProductionOrders = productionOrders.filter(o => 
+  const activeProductionOrders = safeProductionOrders.filter(o => 
     o.status === 'Produzindo' || o.status === 'Em Setup'
   ).length;
   
-  const avgEfficiency = productionOrders
+  const avgEfficiency = safeProductionOrders
     .filter(o => o.efficiency)
-    .reduce((acc, o) => acc + (o.efficiency || 0), 0) / productionOrders.filter(o => o.efficiency).length || 0;
+    .reduce((acc, o) => acc + (o.efficiency || 0), 0) / safeProductionOrders.filter(o => o.efficiency).length || 0;
   
-  const pendingSalesOrders = salesOrders.filter(o => 
+  const pendingSalesOrders = safeSalesOrders.filter(o => 
     o.status === 'orcamento' || o.status === 'aprovado' || o.status === 'producao'
   ).length;
   
-  const pendingValue = salesOrders
+  const pendingValue = safeSalesOrders
     .filter(o => o.status === 'orcamento' || o.status === 'aprovado' || o.status === 'producao')
     .reduce((sum, o) => sum + o.total, 0);
     
-  const lowStockProducts = products.filter(p => 
+  const lowStockProducts = safeProducts.filter(p => 
     p.currentStock <= p.minStock && p.status === 'Ativo'
   ).length;
 
@@ -41,7 +46,7 @@ export const KPICards = ({ productionOrders, salesOrders, customers, products }:
       title: 'Produção Ativa',
       value: activeProductionOrders.toString(),
       unit: 'ordens',
-      change: `${productionOrders.length} total`,
+      change: `${safeProductionOrders.length} total`,
       comparison: 'ordens cadastradas',
       icon: TrendingUp,
       color: 'success',
