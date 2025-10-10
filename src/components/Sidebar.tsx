@@ -23,6 +23,7 @@ import {
   Building2,
   UserCog,
   Sliders,
+  BarChart3,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -83,6 +84,11 @@ const menuItems: MenuItem[] = [
       { title: 'Previsão de Qualidade', icon: ClipboardCheck, path: '/ia/qualidade' },
       { title: 'Insights Automáticos', icon: Brain, path: '/ia/insights' },
     ],
+  },
+  {
+    title: 'Relatórios',
+    icon: BarChart3,
+    path: '/relatorios',
   },
   {
     title: 'Cadastros',

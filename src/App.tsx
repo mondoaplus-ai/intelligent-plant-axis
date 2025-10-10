@@ -10,6 +10,7 @@ import ProductionOrders from "./pages/ProductionOrders";
 import Appointments from "./pages/Appointments";
 import Customers from "./pages/Customers";
 import Orders from "./pages/Orders";
+import Reports from "./pages/Reports";
 import NotFoundPage from "./pages/NotFoundPage";
 
 const queryClient = new QueryClient();
@@ -54,6 +55,9 @@ const App = () => (
             <Route path="/ia/sequenciamento" element={<PlaceholderPage title="Otimização de Sequenciamento" />} />
             <Route path="/ia/qualidade" element={<PlaceholderPage title="Previsão de Qualidade" />} />
             <Route path="/ia/insights" element={<PlaceholderPage title="Insights Automáticos" />} />
+            
+            {/* Relatórios */}
+            <Route path="/relatorios" element={<Reports />} />
             
             {/* Cadastros */}
             <Route path="/cadastros/produtos" element={<Products />} />
