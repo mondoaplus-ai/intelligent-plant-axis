@@ -12,6 +12,7 @@ import Customers from "./pages/Customers";
 import Orders from "./pages/Orders";
 import Reports from "./pages/Reports";
 import Engineering from "./pages/Engineering";
+import PriceList from "./pages/PriceList";
 import NotFoundPage from "./pages/NotFoundPage";
 
 const queryClient = new QueryClient();
@@ -45,7 +46,7 @@ const App = () => (
             {/* Comercial */}
             <Route path="/comercial/pedidos" element={<Orders />} />
             <Route path="/comercial/clientes" element={<Customers />} />
-            <Route path="/comercial/precos" element={<PlaceholderPage title="Tabela de Preços" />} />
+            <Route path="/comercial/precos" element={<PriceList />} />
             
             {/* Estoque */}
             <Route path="/estoque/movimentacoes" element={<PlaceholderPage title="Movimentações" />} />
