@@ -13,6 +13,7 @@ import Orders from "./pages/Orders";
 import Reports from "./pages/Reports";
 import Engineering from "./pages/Engineering";
 import PriceList from "./pages/PriceList";
+import StockMovements from "./pages/StockMovements";
 import NotFoundPage from "./pages/NotFoundPage";
 
 const queryClient = new QueryClient();
@@ -49,7 +50,7 @@ const App = () => (
             <Route path="/comercial/precos" element={<PriceList />} />
             
             {/* Estoque */}
-            <Route path="/estoque/movimentacoes" element={<PlaceholderPage title="Movimentações" />} />
+            <Route path="/estoque/movimentacoes" element={<StockMovements />} />
             <Route path="/estoque/inventario" element={<PlaceholderPage title="Inventário" />} />
             <Route path="/estoque/produtos" element={<PlaceholderPage title="Produtos" />} />
             
