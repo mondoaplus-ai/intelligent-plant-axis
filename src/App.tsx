@@ -14,6 +14,7 @@ import Reports from "./pages/Reports";
 import Engineering from "./pages/Engineering";
 import PriceList from "./pages/PriceList";
 import StockMovements from "./pages/StockMovements";
+import StockInventory from "./pages/StockInventory";
 import NotFoundPage from "./pages/NotFoundPage";
 
 const queryClient = new QueryClient();
@@ -51,8 +52,8 @@ const App = () => (
             
             {/* Estoque */}
             <Route path="/estoque/movimentacoes" element={<StockMovements />} />
-            <Route path="/estoque/inventario" element={<PlaceholderPage title="Inventário" />} />
-            <Route path="/estoque/produtos" element={<PlaceholderPage title="Produtos" />} />
+            <Route path="/estoque/inventario" element={<StockInventory />} />
+            <Route path="/estoque/produtos" element={<Products />} />
             
             {/* IA Produtiva */}
             <Route path="/ia/sequenciamento" element={<PlaceholderPage title="Otimização de Sequenciamento" />} />
