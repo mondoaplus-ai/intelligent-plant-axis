@@ -1,18 +1,23 @@
 import { useState, useMemo } from 'react';
-import { Plus, Download } from 'lucide-react';
+import { Plus, Download, Upload, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProductStats } from '@/components/products/ProductStats';
 import { ProductFilters } from '@/components/products/ProductFilters';
 import { ProductTable } from '@/components/products/ProductTable';
 import { ProductModal } from '@/components/products/ProductModal';
+import { ProductStockAlert } from '@/components/products/ProductStockAlert';
+import { ProductImportModal } from '@/components/products/ProductImportModal';
+import { ProductMovementHistory } from '@/components/products/ProductMovementHistory';
 import { useProductStore } from '@/lib/productStore';
 import { Product } from '@/types/product';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
 export default function Products() {
-  const { products, filters, sortField, sortDirection } = useProductStore();
+  const { products, filters, sortField, sortDirection, addProduct } = useProductStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   // Filtrar produtos
@@ -106,6 +111,17 @@ export default function Products() {
     toast.success('CSV exportado com sucesso!');
   };
 
+  const handleImport = (importedProducts: any[]) => {
+    importedProducts.forEach(product => {
+      addProduct(product);
+    });
+  };
+
+  const handleViewHistory = (product: Product) => {
+    setSelectedProduct(product);
+    setIsHistoryModalOpen(true);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -121,6 +137,10 @@ export default function Products() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setIsImportModalOpen(true)}>
+            <Upload className="h-4 w-4 mr-2" />
+            Importar CSV
+          </Button>
           <Button variant="outline" onClick={handleExportAll}>
             <Download className="h-4 w-4 mr-2" />
             Exportar CSV
@@ -132,6 +152,9 @@ export default function Products() {
         </div>
       </div>
 
+      {/* Alertas de Estoque */}
+      <ProductStockAlert products={products} onViewProduct={handleEditProduct} />
+
       {/* Estatísticas */}
       <ProductStats products={products} />
 
@@ -141,11 +164,24 @@ export default function Products() {
       {/* Tabela */}
       <ProductTable products={filteredProducts} onEdit={handleEditProduct} />
 
-      {/* Modal */}
+      {/* Modals */}
       <ProductModal
         open={isModalOpen}
         onClose={handleCloseModal}
         product={selectedProduct}
+      />
+
+      <ProductImportModal
+        open={isImportModalOpen}
+        onOpenChange={setIsImportModalOpen}
+        onImport={handleImport}
+      />
+
+      <ProductMovementHistory
+        open={isHistoryModalOpen}
+        onOpenChange={setIsHistoryModalOpen}
+        productId={selectedProduct?.id}
+        productName={selectedProduct?.name}
       />
     </motion.div>
   );
