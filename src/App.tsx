@@ -15,6 +15,9 @@ import Engineering from "./pages/Engineering";
 import PriceList from "./pages/PriceList";
 import StockMovements from "./pages/StockMovements";
 import StockInventory from "./pages/StockInventory";
+import Companies from "./pages/Companies";
+import Users from "./pages/Users";
+import Settings from "./pages/Settings";
 import NotFoundPage from "./pages/NotFoundPage";
 
 const queryClient = new QueryClient();
@@ -65,9 +68,9 @@ const App = () => (
             
             {/* Cadastros */}
             <Route path="/cadastros/produtos" element={<Products />} />
-            <Route path="/cadastros/empresas" element={<PlaceholderPage title="Empresas" />} />
-            <Route path="/cadastros/usuarios" element={<PlaceholderPage title="Usuários" />} />
-            <Route path="/cadastros/parametros" element={<PlaceholderPage title="Parâmetros" />} />
+            <Route path="/cadastros/empresas" element={<Companies />} />
+            <Route path="/cadastros/usuarios" element={<Users />} />
+            <Route path="/cadastros/parametros" element={<Settings />} />
             
             {/* 404 */}
             <Route path="*" element={<NotFoundPage />} />
