@@ -5,16 +5,19 @@ import { BOMFilters } from '@/components/engineering/BOMFilters';
 import { BOMStats } from '@/components/engineering/BOMStats';
 import { BOMTable } from '@/components/engineering/BOMTable';
 import { BOMModal } from '@/components/engineering/BOMModal';
+import { BOMFormModal } from '@/components/engineering/BOMFormModal';
 import { useBOMStore } from '@/lib/bomStore';
 import { BOM } from '@/types/bom';
 import { toast } from 'sonner';
 
 export default function Engineering() {
-  const { boms, deleteBOM } = useBOMStore();
+  const { boms, addBOM, updateBOM, deleteBOM } = useBOMStore();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedBOM, setSelectedBOM] = useState<BOM | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [formModalOpen, setFormModalOpen] = useState(false);
+  const [editingBOM, setEditingBOM] = useState<BOM | undefined>();
 
   const filteredBOMs = boms.filter((bom) => {
     const matchesSearch = bom.productName.toLowerCase().includes(search.toLowerCase());
@@ -24,11 +27,12 @@ export default function Engineering() {
 
   const handleView = (bom: BOM) => {
     setSelectedBOM(bom);
-    setModalOpen(true);
+    setViewModalOpen(true);
   };
 
   const handleEdit = (bom: BOM) => {
-    toast.info('Função de edição será implementada em breve');
+    setEditingBOM(bom);
+    setFormModalOpen(true);
   };
 
   const handleDelete = (id: string) => {
@@ -39,7 +43,19 @@ export default function Engineering() {
   };
 
   const handleAdd = () => {
-    toast.info('Função de adicionar BOM será implementada em breve');
+    setEditingBOM(undefined);
+    setFormModalOpen(true);
+  };
+
+  const handleSave = (bomData: Omit<BOM, 'id' | 'createdAt' | 'updatedAt'>) => {
+    if (editingBOM) {
+      updateBOM(editingBOM.id, bomData);
+      toast.success('Estrutura de produto atualizada com sucesso');
+    } else {
+      addBOM(bomData);
+      toast.success('Estrutura de produto criada com sucesso');
+    }
+    setEditingBOM(undefined);
   };
 
   return (
@@ -77,11 +93,21 @@ export default function Engineering() {
 
       <BOMModal
         bom={selectedBOM}
-        open={modalOpen}
+        open={viewModalOpen}
         onClose={() => {
-          setModalOpen(false);
+          setViewModalOpen(false);
           setSelectedBOM(null);
         }}
+      />
+
+      <BOMFormModal
+        open={formModalOpen}
+        onClose={() => {
+          setFormModalOpen(false);
+          setEditingBOM(undefined);
+        }}
+        onSave={handleSave}
+        bom={editingBOM}
       />
     </div>
   );

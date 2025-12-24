@@ -4,15 +4,18 @@ import { Button } from '@/components/ui/button';
 import { OrderStats } from '@/components/orders/OrderStats';
 import { OrderFilters } from '@/components/orders/OrderFilters';
 import { OrderTable } from '@/components/orders/OrderTable';
+import { OrderModal } from '@/components/orders/OrderModal';
 import { useOrderStore } from '@/lib/orderStore';
 import { Order } from '@/types/order';
 import { toast } from 'sonner';
 
 export default function Orders() {
-  const { orders, deleteOrder } = useOrderStore();
+  const { orders, addOrder, updateOrder, deleteOrder } = useOrderStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | undefined>();
 
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
@@ -32,7 +35,8 @@ export default function Orders() {
   }, [orders, searchTerm, statusFilter, priorityFilter]);
 
   const handleEdit = (order: Order) => {
-    toast.info('Funcionalidade em desenvolvimento');
+    setSelectedOrder(order);
+    setModalOpen(true);
   };
 
   const handleDelete = (id: string) => {
@@ -43,11 +47,24 @@ export default function Orders() {
   };
 
   const handleView = (order: Order) => {
-    toast.info('Funcionalidade em desenvolvimento');
+    setSelectedOrder(order);
+    setModalOpen(true);
   };
 
   const handleNewOrder = () => {
-    toast.info('Funcionalidade em desenvolvimento');
+    setSelectedOrder(undefined);
+    setModalOpen(true);
+  };
+
+  const handleSave = (orderData: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>) => {
+    if (selectedOrder) {
+      updateOrder(selectedOrder.id, orderData);
+      toast.success('Pedido atualizado com sucesso!');
+    } else {
+      addOrder(orderData);
+      toast.success('Pedido criado com sucesso!');
+    }
+    setSelectedOrder(undefined);
   };
 
   return (
@@ -81,6 +98,16 @@ export default function Orders() {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onView={handleView}
+      />
+
+      <OrderModal
+        open={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setSelectedOrder(undefined);
+        }}
+        onSave={handleSave}
+        order={selectedOrder}
       />
     </div>
   );
