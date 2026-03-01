@@ -1,7 +1,8 @@
-import { Bell, ChevronRight, User } from 'lucide-react';
+import { Bell, ChevronRight, User, LogOut } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback } from './ui/avatar';
+import { useAuth } from '@/hooks/useAuth';
 import { useAppStore } from '@/lib/store';
 import { useLocation } from 'react-router-dom';
 import {
@@ -33,14 +34,22 @@ const breadcrumbMap: Record<string, string[]> = {
 };
 
 export const Header = () => {
-  const { user, notifications } = useAppStore();
+  const { profile, signOut } = useAuth();
+  const { notifications } = useAppStore();
   const location = useLocation();
   const breadcrumbs = breadcrumbMap[location.pathname] || ['Dashboard'];
+
+  const userName = profile?.name || 'Usuário';
+  const userInitials = userName
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card shadow-sm">
       <div className="flex h-16 items-center justify-between px-6">
-        {/* Breadcrumbs */}
         <div className="flex items-center gap-2 text-sm">
           {breadcrumbs.map((crumb, index) => (
             <div key={index} className="flex items-center gap-2">
@@ -58,9 +67,7 @@ export const Header = () => {
           ))}
         </div>
 
-        {/* Right Side Actions */}
         <div className="flex items-center gap-4">
-          {/* Notifications */}
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="w-5 h-5" />
             {notifications > 0 && (
@@ -73,22 +80,17 @@ export const Header = () => {
             )}
           </Button>
 
-          {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center gap-3 pl-2 pr-3">
                 <Avatar className="h-8 w-8">
                   <AvatarFallback className="bg-primary text-primary-foreground">
-                    {user?.name
-                      .split(' ')
-                      .map((n) => n[0])
-                      .join('')
-                      .toUpperCase()}
+                    {userInitials}
                   </AvatarFallback>
                 </Avatar>
                 <div className="text-left hidden md:block">
-                  <p className="text-sm font-medium">{user?.name}</p>
-                  <p className="text-xs text-muted-foreground">{user?.role}</p>
+                  <p className="text-sm font-medium">{userName}</p>
+                  <p className="text-xs text-muted-foreground">{profile?.department || 'Sem departamento'}</p>
                 </div>
               </Button>
             </DropdownMenuTrigger>
@@ -104,7 +106,10 @@ export const Header = () => {
                 Notificações
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-danger">Sair</DropdownMenuItem>
+              <DropdownMenuItem className="text-danger" onClick={signOut}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Sair
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
