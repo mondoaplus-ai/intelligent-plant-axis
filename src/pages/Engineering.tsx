@@ -1,17 +1,23 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { BOMFilters } from '@/components/engineering/BOMFilters';
 import { BOMStats } from '@/components/engineering/BOMStats';
 import { BOMTable } from '@/components/engineering/BOMTable';
 import { BOMModal } from '@/components/engineering/BOMModal';
 import { BOMFormModal } from '@/components/engineering/BOMFormModal';
-import { useBOMStore } from '@/lib/bomStore';
+import { useBOMs, useCreateBOM, useUpdateBOM, useDeleteBOM } from '@/hooks/useBOMs';
+import { useUserRole } from '@/hooks/useUserRole';
 import { BOM } from '@/types/bom';
 import { toast } from 'sonner';
 
 export default function Engineering() {
-  const { boms, addBOM, updateBOM, deleteBOM } = useBOMStore();
+  const { data: boms = [], isLoading } = useBOMs();
+  const createBOM = useCreateBOM();
+  const updateBOM = useUpdateBOM();
+  const deleteBOM = useDeleteBOM();
+  const { canEdit, canDelete } = useUserRole();
+
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedBOM, setSelectedBOM] = useState<BOM | null>(null);
@@ -31,46 +37,65 @@ export default function Engineering() {
   };
 
   const handleEdit = (bom: BOM) => {
+    if (!canEdit) return toast.error('Você não tem permissão para editar fichas técnicas');
     setEditingBOM(bom);
     setFormModalOpen(true);
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Tem certeza que deseja excluir esta estrutura de produto?')) {
-      deleteBOM(id);
-      toast.success('Estrutura de produto excluída com sucesso');
-    }
+    if (!canDelete) return toast.error('Você não tem permissão para excluir fichas técnicas');
+    if (!confirm('Tem certeza que deseja excluir esta ficha técnica?')) return;
+    deleteBOM.mutate(id, {
+      onSuccess: () => toast.success('Ficha técnica excluída'),
+      onError: (e: any) => toast.error(e?.message ?? 'Erro ao excluir'),
+    });
   };
 
   const handleAdd = () => {
+    if (!canEdit) return toast.error('Você não tem permissão para criar fichas técnicas');
     setEditingBOM(undefined);
     setFormModalOpen(true);
   };
 
   const handleSave = (bomData: Omit<BOM, 'id' | 'createdAt' | 'updatedAt'>) => {
-    if (editingBOM) {
-      updateBOM(editingBOM.id, bomData);
-      toast.success('Estrutura de produto atualizada com sucesso');
-    } else {
-      addBOM(bomData);
-      toast.success('Estrutura de produto criada com sucesso');
+    if (!bomData.productId) {
+      toast.error('Selecione um produto');
+      return;
     }
-    setEditingBOM(undefined);
+    if (bomData.components.some((c) => c.quantity <= 0 || c.cost < 0)) {
+      toast.error('Quantidades devem ser positivas e custos não-negativos');
+      return;
+    }
+    const opts = {
+      onSuccess: () => {
+        toast.success(editingBOM ? 'Ficha técnica atualizada' : 'Ficha técnica criada');
+        setEditingBOM(undefined);
+        setFormModalOpen(false);
+      },
+      onError: (e: any) => toast.error(e?.message ?? 'Erro ao salvar'),
+    };
+    if (editingBOM) {
+      updateBOM.mutate({ id: editingBOM.id, data: bomData }, opts);
+    } else {
+      createBOM.mutate(bomData, opts);
+    }
   };
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Engenharia de Produto</h1>
+          <h1 className="text-3xl font-bold">Ficha Técnica (BOM)</h1>
           <p className="text-muted-foreground mt-1">
-            Gerencie estruturas de produto (BOM) e processos de fabricação
+            Gerencie as fichas técnicas dos produtos, insumos e processos de fabricação
           </p>
         </div>
-        <Button onClick={handleAdd} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Nova Estrutura
-        </Button>
+        {canEdit && (
+          <Button onClick={handleAdd} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Nova Ficha Técnica
+          </Button>
+        )}
       </div>
 
       <BOMStats boms={boms} />
@@ -83,12 +108,18 @@ export default function Engineering() {
           onStatusFilterChange={setStatusFilter}
         />
 
-        <BOMTable
-          boms={filteredBOMs}
-          onView={handleView}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <BOMTable
+            boms={filteredBOMs}
+            onView={handleView}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        )}
       </div>
 
       <BOMModal
@@ -108,6 +139,7 @@ export default function Engineering() {
         }}
         onSave={handleSave}
         bom={editingBOM}
+        saving={createBOM.isPending || updateBOM.isPending}
       />
     </div>
   );

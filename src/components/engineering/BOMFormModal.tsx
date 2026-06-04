@@ -7,17 +7,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2, GripVertical } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Loader2 } from 'lucide-react';
 import { BOM, BOMComponent, ProductionProcess } from '@/types/bom';
+import { useProductsList } from '@/hooks/useProductsList';
 
 interface BOMFormModalProps {
   open: boolean;
   onClose: () => void;
   onSave: (bom: Omit<BOM, 'id' | 'createdAt' | 'updatedAt'>) => void;
   bom?: BOM;
+  saving?: boolean;
 }
 
-export const BOMFormModal = ({ open, onClose, onSave, bom }: BOMFormModalProps) => {
+export const BOMFormModal = ({ open, onClose, onSave, bom, saving }: BOMFormModalProps) => {
+  const { data: products = [] } = useProductsList();
   const [formData, setFormData] = useState({
     productId: '',
     productName: '',
@@ -63,7 +66,7 @@ export const BOMFormModal = ({ open, onClose, onSave, bom }: BOMFormModalProps) 
       });
     } else {
       setFormData({
-        productId: Date.now().toString(),
+        productId: '',
         productName: '',
         version: '1.0',
         status: 'em_revisao',
@@ -72,7 +75,7 @@ export const BOMFormModal = ({ open, onClose, onSave, bom }: BOMFormModalProps) 
         totalCost: 0,
         totalTime: 0,
         notes: '',
-        createdBy: 'Admin',
+        createdBy: '',
       });
     }
   }, [bom, open]);
@@ -175,9 +178,8 @@ export const BOMFormModal = ({ open, onClose, onSave, bom }: BOMFormModalProps) 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.productName) return;
+    if (!formData.productId || !formData.productName) return;
     onSave(formData);
-    onClose();
   };
 
   return (
@@ -198,13 +200,25 @@ export const BOMFormModal = ({ open, onClose, onSave, bom }: BOMFormModalProps) 
             <TabsContent value="geral" className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Nome do Produto</Label>
-                  <Input
-                    value={formData.productName}
-                    onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
-                    placeholder="Nome do produto final"
-                    required
-                  />
+                  <Label>Produto</Label>
+                  <Select
+                    value={formData.productId}
+                    onValueChange={(value) => {
+                      const p = products.find((x) => x.id === value);
+                      setFormData({ ...formData, productId: value, productName: p?.name ?? '' });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o produto" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {products.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.code} — {p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Versão</Label>
@@ -469,8 +483,9 @@ export const BOMFormModal = ({ open, onClose, onSave, bom }: BOMFormModalProps) 
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={!formData.productName}>
-              {bom ? 'Salvar Alterações' : 'Criar Estrutura'}
+            <Button type="submit" disabled={!formData.productId || saving}>
+              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+              {bom ? 'Salvar Alterações' : 'Criar Ficha Técnica'}
             </Button>
           </div>
         </form>
