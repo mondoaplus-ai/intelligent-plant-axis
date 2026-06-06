@@ -5,12 +5,15 @@ import { OrderStats } from '@/components/orders/OrderStats';
 import { OrderFilters } from '@/components/orders/OrderFilters';
 import { OrderTable } from '@/components/orders/OrderTable';
 import { OrderModal } from '@/components/orders/OrderModal';
-import { useOrderStore } from '@/lib/orderStore';
+import { useOrders, useCreateOrder, useUpdateOrder, useDeleteOrder } from '@/hooks/useOrders';
 import { Order } from '@/types/order';
 import { toast } from 'sonner';
 
 export default function Orders() {
-  const { orders, addOrder, updateOrder, deleteOrder } = useOrderStore();
+  const { data: orders = [], isLoading } = useOrders();
+  const createOrder = useCreateOrder();
+  const updateOrder = useUpdateOrder();
+  const deleteOrder = useDeleteOrder();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
@@ -41,8 +44,10 @@ export default function Orders() {
 
   const handleDelete = (id: string) => {
     if (confirm('Tem certeza que deseja excluir este pedido?')) {
-      deleteOrder(id);
-      toast.success('Pedido excluído com sucesso!');
+      deleteOrder.mutate(id, {
+        onSuccess: () => toast.success('Pedido excluído com sucesso!'),
+        onError: (e: any) => toast.error(e?.message ?? 'Erro ao excluir'),
+      });
     }
   };
 
@@ -57,14 +62,18 @@ export default function Orders() {
   };
 
   const handleSave = (orderData: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const opts = {
+      onSuccess: () => {
+        toast.success(selectedOrder ? 'Pedido atualizado com sucesso!' : 'Pedido criado com sucesso!');
+        setSelectedOrder(undefined);
+      },
+      onError: (e: any) => toast.error(e?.message ?? 'Erro ao salvar pedido'),
+    };
     if (selectedOrder) {
-      updateOrder(selectedOrder.id, orderData);
-      toast.success('Pedido atualizado com sucesso!');
+      updateOrder.mutate({ id: selectedOrder.id, data: orderData }, opts);
     } else {
-      addOrder(orderData);
-      toast.success('Pedido criado com sucesso!');
+      createOrder.mutate(orderData, opts);
     }
-    setSelectedOrder(undefined);
   };
 
   return (

@@ -17,6 +17,7 @@ import {
   ShoppingBag,
   Users,
   DollarSign,
+  Wallet,
   Move,
   Archive,
   Box,
@@ -72,6 +73,14 @@ const menuItems: MenuItem[] = [
       { title: 'Movimentações', icon: Move, path: '/estoque/movimentacoes' },
       { title: 'Inventário', icon: Archive, path: '/estoque/inventario' },
       { title: 'Produtos', icon: Box, path: '/estoque/produtos' },
+    ],
+  },
+  {
+    title: 'Financeiro',
+    icon: DollarSign,
+    path: '/financeiro',
+    submenu: [
+      { title: 'Caixa', icon: Wallet, path: '/financeiro/caixa' },
     ],
   },
   {

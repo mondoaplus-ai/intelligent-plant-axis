@@ -9,12 +9,16 @@ import { ProductStockAlert } from '@/components/products/ProductStockAlert';
 import { ProductImportModal } from '@/components/products/ProductImportModal';
 import { ProductMovementHistory } from '@/components/products/ProductMovementHistory';
 import { useProductStore } from '@/lib/productStore';
+import { useProducts, useCreateProduct, useDeleteProduct } from '@/hooks/useProducts';
 import { Product } from '@/types/product';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
 export default function Products() {
-  const { products, filters, sortField, sortDirection, addProduct } = useProductStore();
+  const { filters, sortField, sortDirection } = useProductStore();
+  const { data: products = [], isLoading } = useProducts();
+  const createProduct = useCreateProduct();
+  const deleteProduct = useDeleteProduct();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
@@ -113,7 +117,7 @@ export default function Products() {
 
   const handleImport = (importedProducts: any[]) => {
     importedProducts.forEach(product => {
-      addProduct(product);
+      createProduct.mutate(product);
     });
   };
 
