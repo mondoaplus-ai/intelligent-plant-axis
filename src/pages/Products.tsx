@@ -117,7 +117,7 @@ export default function Products() {
 
   const handleImport = (importedProducts: any[]) => {
     importedProducts.forEach(product => {
-      addProduct(product);
+      createProduct.mutate(product);
     });
   };
 
