@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Product, ProductCategory, ProductType, ProductUnit, ProductSupplier } from '@/types/product';
-import { useProductStore } from '@/lib/productStore';
+import { useCreateProduct, useUpdateProduct } from '@/hooks/useProducts';
 import { toast } from 'sonner';
 
 interface ProductModalProps {
@@ -20,7 +20,8 @@ interface ProductModalProps {
 }
 
 export const ProductModal = ({ open, onClose, product }: ProductModalProps) => {
-  const { addProduct, updateProduct } = useProductStore();
+  const createProduct = useCreateProduct();
+  const updateProduct = useUpdateProduct();
   const isEditing = !!product;
 
   const [formData, setFormData] = useState<Partial<Product>>({
@@ -97,15 +98,18 @@ export const ProductModal = ({ open, onClose, product }: ProductModalProps) => {
       return;
     }
 
+    const opts = {
+      onSuccess: () => {
+        toast.success(isEditing ? 'Produto atualizado com sucesso!' : 'Produto cadastrado com sucesso!');
+        onClose();
+      },
+      onError: (e: any) => toast.error(e?.message ?? 'Erro ao salvar produto'),
+    };
     if (isEditing && product) {
-      updateProduct(product.id, formData);
-      toast.success('Produto atualizado com sucesso!');
+      updateProduct.mutate({ id: product.id, ...formData }, opts);
     } else {
-      addProduct(formData as Omit<Product, 'id' | 'createdAt' | 'updatedAt'>);
-      toast.success('Produto cadastrado com sucesso!');
+      createProduct.mutate(formData as Omit<Product, 'id' | 'createdAt' | 'updatedAt'>, opts);
     }
-
-    onClose();
   };
 
   const handleAddSupplier = () => {
