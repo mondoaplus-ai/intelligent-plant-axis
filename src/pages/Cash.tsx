@@ -220,11 +220,7 @@ const CashEntryModal = ({ open, onClose, accounts, categories, onSave, saving }:
     payment_method: null,
     document_number: null,
     notes: null,
-    sales_order_id: null as any,
-    production_order_id: null as any,
-    supplier_id: null as any,
-    customer_id: null as any,
-  } as any);
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
