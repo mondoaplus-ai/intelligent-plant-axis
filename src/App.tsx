@@ -19,6 +19,7 @@ import StockInventory from "./pages/StockInventory";
 import Companies from "./pages/Companies";
 import Users from "./pages/Users";
 import Settings from "./pages/Settings";
+import Cash from "./pages/Cash";
 import Auth from "./pages/Auth";
 import NotFoundPage from "./pages/NotFoundPage";
 import { Loader2 } from "lucide-react";
@@ -62,6 +63,7 @@ const ProtectedRoutes = () => {
         <Route path="/estoque/movimentacoes" element={<StockMovements />} />
         <Route path="/estoque/inventario" element={<StockInventory />} />
         <Route path="/estoque/produtos" element={<Products />} />
+        <Route path="/financeiro/caixa" element={<Cash />} />
         <Route path="/ia/sequenciamento" element={<PlaceholderPage title="Otimização de Sequenciamento" />} />
         <Route path="/ia/qualidade" element={<PlaceholderPage title="Previsão de Qualidade" />} />
         <Route path="/ia/insights" element={<PlaceholderPage title="Insights Automáticos" />} />
