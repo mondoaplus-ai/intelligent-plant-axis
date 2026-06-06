@@ -5,12 +5,15 @@ import { OrderStats } from '@/components/orders/OrderStats';
 import { OrderFilters } from '@/components/orders/OrderFilters';
 import { OrderTable } from '@/components/orders/OrderTable';
 import { OrderModal } from '@/components/orders/OrderModal';
-import { useOrderStore } from '@/lib/orderStore';
+import { useOrders, useCreateOrder, useUpdateOrder, useDeleteOrder } from '@/hooks/useOrders';
 import { Order } from '@/types/order';
 import { toast } from 'sonner';
 
 export default function Orders() {
-  const { orders, addOrder, updateOrder, deleteOrder } = useOrderStore();
+  const { data: orders = [], isLoading } = useOrders();
+  const createOrder = useCreateOrder();
+  const updateOrder = useUpdateOrder();
+  const deleteOrder = useDeleteOrder();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
