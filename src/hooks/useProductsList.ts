@@ -9,9 +9,13 @@ export interface ProductOption {
   sale_price: number;
 }
 
-export const useProductsList = () =>
+export const useProductsList = (enabled: boolean = true) =>
   useQuery({
     queryKey: ['products-list'],
+    enabled,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
     queryFn: async (): Promise<ProductOption[]> => {
       const { data, error } = await supabase
         .from('products')
