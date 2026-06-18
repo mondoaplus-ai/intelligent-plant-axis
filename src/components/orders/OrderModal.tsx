@@ -31,8 +31,15 @@ const generateOrderNumber = () => {
 };
 
 export const OrderModal = ({ open, onClose, onSave, order }: OrderModalProps) => {
-  const { data: customers = [] } = useCustomersList();
-  const { data: products = [] } = useProductsList();
+  const { data: customers = [], refetch: refetchCustomers } = useCustomersList(open);
+  const { data: products = [], refetch: refetchProducts } = useProductsList(open);
+
+  useEffect(() => {
+    if (open) {
+      refetchCustomers();
+      refetchProducts();
+    }
+  }, [open, refetchCustomers, refetchProducts]);
   const [formData, setFormData] = useState({
     orderNumber: '',
     customerId: '',
