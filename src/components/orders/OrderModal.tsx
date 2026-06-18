@@ -131,7 +131,7 @@ export const OrderModal = ({ open, onClose, onSave, order }: OrderModalProps) =>
     const itemTotal = (newItem.quantity || 0) * (newItem.unitPrice || 0) * (1 - (newItem.discount || 0) / 100);
     const item: OrderItem = {
       id: Date.now().toString(),
-      productId: Date.now().toString(),
+      productId: (newItem as any).productId || Date.now().toString(),
       productCode: newItem.productCode || '',
       productName: newItem.productName || '',
       quantity: newItem.quantity || 1,
@@ -158,7 +158,7 @@ export const OrderModal = ({ open, onClose, onSave, order }: OrderModalProps) =>
       unit: 'un',
       unitPrice: 0,
       discount: 0,
-    });
+    } as any);
   };
 
   const handleRemoveItem = (itemId: string) => {
