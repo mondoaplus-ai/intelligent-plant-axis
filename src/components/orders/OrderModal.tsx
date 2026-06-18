@@ -14,6 +14,8 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Order, OrderItem, OrderStatus, OrderPriority, PaymentMethod, PaymentTerm } from '@/types/order';
+import { useCustomersList } from '@/hooks/useCustomersList';
+import { useProductsList } from '@/hooks/useProductsList';
 
 interface OrderModalProps {
   open: boolean;
@@ -29,6 +31,8 @@ const generateOrderNumber = () => {
 };
 
 export const OrderModal = ({ open, onClose, onSave, order }: OrderModalProps) => {
+  const { data: customers = [] } = useCustomersList();
+  const { data: products = [] } = useProductsList();
   const [formData, setFormData] = useState({
     orderNumber: '',
     customerId: '',
@@ -127,7 +131,7 @@ export const OrderModal = ({ open, onClose, onSave, order }: OrderModalProps) =>
     const itemTotal = (newItem.quantity || 0) * (newItem.unitPrice || 0) * (1 - (newItem.discount || 0) / 100);
     const item: OrderItem = {
       id: Date.now().toString(),
-      productId: Date.now().toString(),
+      productId: (newItem as any).productId || Date.now().toString(),
       productCode: newItem.productCode || '',
       productName: newItem.productName || '',
       quantity: newItem.quantity || 1,
@@ -154,7 +158,7 @@ export const OrderModal = ({ open, onClose, onSave, order }: OrderModalProps) =>
       unit: 'un',
       unitPrice: 0,
       discount: 0,
-    });
+    } as any);
   };
 
   const handleRemoveItem = (itemId: string) => {
@@ -197,13 +201,40 @@ export const OrderModal = ({ open, onClose, onSave, order }: OrderModalProps) =>
             <TabsContent value="dados" className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Nome do Cliente</Label>
-                  <Input
-                    value={formData.customerName}
-                    onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                    placeholder="Nome completo ou razão social"
-                    required
-                  />
+                  <Label>Cliente</Label>
+                  <Select
+                    value={formData.customerId}
+                    onValueChange={(value) => {
+                      const c = customers.find((x) => x.id === value);
+                      if (!c) return;
+                      setFormData({
+                        ...formData,
+                        customerId: c.id,
+                        customerName: c.name,
+                        customerDocument: c.cpf_cnpj || '',
+                        shippingAddress: {
+                          street: c.street || '',
+                          number: c.number || '',
+                          complement: c.complement || '',
+                          neighborhood: c.neighborhood || '',
+                          city: c.city || '',
+                          state: c.state || '',
+                          zipCode: c.zip_code || '',
+                        },
+                      });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={customers.length ? 'Selecione um cliente cadastrado' : 'Nenhum cliente cadastrado'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {customers.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}{c.cpf_cnpj ? ` — ${c.cpf_cnpj}` : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>CPF/CNPJ</Label>
@@ -211,6 +242,7 @@ export const OrderModal = ({ open, onClose, onSave, order }: OrderModalProps) =>
                     value={formData.customerDocument}
                     onChange={(e) => setFormData({ ...formData, customerDocument: e.target.value })}
                     placeholder="000.000.000-00"
+                    readOnly
                   />
                 </div>
               </div>
@@ -311,21 +343,34 @@ export const OrderModal = ({ open, onClose, onSave, order }: OrderModalProps) =>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-6 gap-2">
-                    <div className="space-y-1">
-                      <Label className="text-xs">Código</Label>
-                      <Input
-                        value={newItem.productCode}
-                        onChange={(e) => setNewItem({ ...newItem, productCode: e.target.value })}
-                        placeholder="COD"
-                      />
-                    </div>
-                    <div className="col-span-2 space-y-1">
+                    <div className="col-span-3 space-y-1">
                       <Label className="text-xs">Produto</Label>
-                      <Input
-                        value={newItem.productName}
-                        onChange={(e) => setNewItem({ ...newItem, productName: e.target.value })}
-                        placeholder="Nome do produto"
-                      />
+                      <Select
+                        value={(newItem as any).productId || ''}
+                        onValueChange={(value) => {
+                          const p = products.find((x) => x.id === value);
+                          if (!p) return;
+                          setNewItem({
+                            ...newItem,
+                            productId: p.id,
+                            productCode: p.code,
+                            productName: p.name,
+                            unit: p.unit,
+                            unitPrice: p.sale_price,
+                          } as any);
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={products.length ? 'Selecione um produto cadastrado' : 'Nenhum produto cadastrado'} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {products.map((p) => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.code} — {p.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Qtd</Label>

@@ -5,6 +5,8 @@ export interface ProductOption {
   id: string;
   code: string;
   name: string;
+  unit: string;
+  sale_price: number;
 }
 
 export const useProductsList = () =>
@@ -13,9 +15,15 @@ export const useProductsList = () =>
     queryFn: async (): Promise<ProductOption[]> => {
       const { data, error } = await supabase
         .from('products')
-        .select('id, code, name')
+        .select('id, code, name, unit, sale_price')
         .order('name');
       if (error) throw error;
-      return data as ProductOption[];
+      return (data || []).map((r: any) => ({
+        id: r.id,
+        code: r.code,
+        name: r.name,
+        unit: r.unit ?? 'un',
+        sale_price: Number(r.sale_price ?? 0),
+      }));
     },
   });
