@@ -21,7 +21,6 @@ export const useCustomersList = () =>
       const { data, error } = await supabase
         .from('customers')
         .select('id, name, cpf_cnpj, street, number, complement, neighborhood, city, state, zip_code')
-        .eq('status', 'ativo')
         .order('name');
       if (error) throw error;
       return (data || []) as CustomerOption[];

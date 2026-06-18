@@ -16,7 +16,6 @@ export const useProductsList = () =>
       const { data, error } = await supabase
         .from('products')
         .select('id, code, name, unit, sale_price')
-        .eq('status', 'ativo')
         .order('name');
       if (error) throw error;
       return (data || []).map((r: any) => ({
