@@ -14,9 +14,13 @@ export interface CustomerOption {
   zip_code?: string | null;
 }
 
-export const useCustomersList = () =>
+export const useCustomersList = (enabled: boolean = true) =>
   useQuery({
     queryKey: ['customers-list'],
+    enabled,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
     queryFn: async (): Promise<CustomerOption[]> => {
       const { data, error } = await supabase
         .from('customers')
