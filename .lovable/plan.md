@@ -1,82 +1,38 @@
-# Plano de Migração SmartERP — Zustand → Supabase + React Query
+Diagnóstico encontrado
 
-## Objetivo
-Substituir os stores Zustand (dados em memória/localStorage) por hooks React Query que leem e escrevem diretamente nas tabelas do Lovable Cloud, persistindo tudo no banco com RLS.
+- A tela Comercial > Clientes ainda está usando o store local `useCustomerStore` com dados em memória/localStorage.
+- O modal de Pedidos já consulta a tabela real de clientes no banco.
+- No banco, a tabela de clientes está vazia neste momento. Por isso o pedido mostra “Nenhum cliente cadastrado”, mesmo que a tela de clientes mostre clientes locais/mockados.
+- O campo de cliente em Pedido é um `Select` comum, não um campo pesquisável; por isso não permite digitar para buscar o nome.
 
-## Status atual (já feito)
-- ✅ Tabelas no banco: `boms`, `bom_components`, `bom_processes`, `products`, `orders`, `order_items`, `cash_accounts`, `cash_entries`, `cash_categories`, etc.
-- ✅ Triggers de recálculo de BOM (`recalculate_bom_totals`, `update_cash_balance`)
-- ✅ Auth + roles (`user_roles`, `has_role`)
-- ✅ `useBOMs.ts`, `useUserRole.ts`, `useProductsList.ts` (módulo BOM já migrado)
-- ✅ `QueryClientProvider` configurado em `App.tsx`
+Plano de correção sem contorno
 
-## Escopo desta migração
+1. Migrar o módulo de Clientes para o banco
+   - Criar hook de clientes com React Query para listar, criar, editar, excluir e alterar status usando a tabela real de clientes.
+   - Mapear corretamente os campos da tela para o banco: nome, código, CPF/CNPJ, contato, endereço principal, status, categoria, prazo de pagamento, limite de crédito e observações.
+   - Manter compatibilidade com os componentes atuais da tela de clientes.
 
-### 1. Ficha Técnica (BOM) — refinamento
-- Renomear/alinhar tipos do BOM ao schema do banco (snake_case): `product_name`, `total_cost`, `total_time`, `created_by`, `created_at`, `updated_at`, `component_name`, `waste_pct`.
-- Atualizar `BOMTable.tsx` e `BOMModal.tsx` para os novos campos.
-- Criar `BOMFormModalV2.tsx` (substitui `BOMFormModal.tsx`) usando o schema real do banco.
-- Atualizar `Engineering.tsx` para usar o novo modal.
+2. Atualizar Comercial > Clientes
+   - Trocar `useCustomerStore` pelo novo hook conectado ao banco.
+   - Ao criar/editar/excluir cliente, salvar no banco de verdade.
+   - Após salvar cliente, invalidar/refazer também a query usada pelo modal de pedidos (`customers-list`), para o pedido enxergar imediatamente o cliente recém-cadastrado.
 
-### 2. Produtos
-- Criar `src/hooks/useProducts.ts` com:
-  - `useProducts(filters)` — listagem com filtros (busca, categoria, status, tipo).
-  - `useCreateProduct()`, `useUpdateProduct()`, `useDeleteProduct()` (mutations).
-- Atualizar `src/pages/Products.tsx`:
-  - Trocar `useProductStore` por hooks.
-  - Adaptar filtros locais para query params.
-  - Tratar `isLoading` e erros (toasts).
-- Atualizar `ProductModal.tsx` e `ProductImportModal.tsx` para chamar mutations.
+3. Corrigir o seletor de cliente no Pedido
+   - Substituir o `Select` simples por um campo pesquisável com digitação.
+   - Ao abrir o pedido, refazer a busca de clientes atualizada no banco.
+   - Ao digitar, filtrar clientes por nome, documento ou código.
+   - Ao selecionar cliente, preencher automaticamente CPF/CNPJ e endereço de entrega.
+   - Exibir mensagens reais: carregando, erro ao carregar, nenhum cliente no banco.
 
-### 3. Pedidos
-- Criar `src/hooks/useOrders.ts` com:
-  - `useOrders()`, `useCreateOrder()`, `useUpdateOrder()`, `useDeleteOrder()`, `useUpdateOrderStatus()`.
-  - Lógica de mapear `order_items` (delete-then-insert no update, como no BOM).
-- Atualizar `src/pages/Orders.tsx` e `OrderModal.tsx`.
+4. Preservar segurança e integridade
+   - Não usar dados mockados/localStorage como fonte do pedido.
+   - Não buscar cliente por chave administrativa.
+   - Usar as permissões existentes do usuário autenticado.
+   - Se necessário, ajustar apenas políticas/permissões da tabela de clientes, sem abrir dados publicamente.
 
-### 4. Caixa (módulo novo)
-- Criar `src/hooks/useCash.ts`:
-  - `useCashAccounts()`, `useCashEntries(filters)`, `useCashSummary()`, `useCashCategories()`.
-  - `useCreateCashEntry()`, `useUpdateCashEntry()`, `useDeleteCashEntry()`.
-- Criar `src/pages/Cash.tsx` com:
-  - Cards de resumo (saldo total, receitas, despesas do mês).
-  - Tabela de lançamentos com filtros (período, conta, tipo, status).
-  - Modal de novo lançamento (receita/despesa, conta, categoria, valor, vencimento).
-- Adicionar rota `/financeiro/caixa` em `App.tsx`.
-- Adicionar item de menu "Financeiro → Caixa" no `Sidebar.tsx`.
-
-### 5. Limpeza
-- Manter stores Zustand antigos em paralelo durante a transição.
-- Após validar cada módulo no preview, remover o arquivo `src/lib/{módulo}Store.ts` correspondente.
-
-## Fora de escopo (próxima rodada)
-- Estoque (`stockMovementStore`, `inventoryStore`)
-- Clientes (`customerStore`)
-- Ordens de Produção (`productionOrderStore`)
-- Apontamentos, Preços, Empresas, Usuários
-
-## Permissões (RBAC já existente)
-Todas as ações de criar/editar/excluir respeitam `useUserRole`:
-- `admin`/`manager`: tudo
-- `operator`: criar e editar
-- `viewer`: somente leitura
-
-## Detalhes técnicos
-
-**Padrão dos hooks (igual ao `useBOMs.ts`):**
-```ts
-const { data, isLoading } = useQuery({ queryKey, queryFn })
-const mutation = useMutation({
-  mutationFn: async (payload) => { /* supabase call */ },
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey });
-    toast.success('...');
-  },
-  onError: (e) => toast.error(e.message),
-});
-```
-
-**Mapeamento de tipos:** os tipos em `src/types/*.ts` (camelCase) permanecem para a UI; os hooks fazem a conversão de/para snake_case do banco na entrada e saída — assim os componentes existentes precisam de poucas mudanças.
-
-## Entregáveis ao final
-Resumo listando para cada módulo: arquivos criados, arquivos editados, arquivos removidos, e como testar (passo a passo no preview).
+5. Validação
+   - Confirmar que a tabela de clientes passa a receber novos cadastros.
+   - Criar um cliente em Comercial > Clientes.
+   - Abrir Novo Pedido.
+   - Digitar parte do nome do cliente e selecionar.
+   - Confirmar que documento e endereço são preenchidos e que o pedido pode ser salvo com o cliente correto.
