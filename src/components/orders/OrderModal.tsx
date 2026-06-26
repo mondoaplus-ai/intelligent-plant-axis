@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Plus, Trash2 } from 'lucide-react';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { CalendarIcon, Plus, Trash2, Check, ChevronsUpDown, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -31,8 +32,9 @@ const generateOrderNumber = () => {
 };
 
 export const OrderModal = ({ open, onClose, onSave, order }: OrderModalProps) => {
-  const { data: customers = [], refetch: refetchCustomers } = useCustomersList(open);
+  const { data: customers = [], refetch: refetchCustomers, isLoading: loadingCustomers, error: customersError } = useCustomersList(open);
   const { data: products = [], refetch: refetchProducts } = useProductsList(open);
+  const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -209,39 +211,82 @@ export const OrderModal = ({ open, onClose, onSave, order }: OrderModalProps) =>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Cliente</Label>
-                  <Select
-                    value={formData.customerId}
-                    onValueChange={(value) => {
-                      const c = customers.find((x) => x.id === value);
-                      if (!c) return;
-                      setFormData({
-                        ...formData,
-                        customerId: c.id,
-                        customerName: c.name,
-                        customerDocument: c.cpf_cnpj || '',
-                        shippingAddress: {
-                          street: c.street || '',
-                          number: c.number || '',
-                          complement: c.complement || '',
-                          neighborhood: c.neighborhood || '',
-                          city: c.city || '',
-                          state: c.state || '',
-                          zipCode: c.zip_code || '',
-                        },
-                      });
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={customers.length ? 'Selecione um cliente cadastrado' : 'Nenhum cliente cadastrado'} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customers.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.name}{c.cpf_cnpj ? ` — ${c.cpf_cnpj}` : ''}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={customerPopoverOpen}
+                        className="w-full justify-between font-normal"
+                      >
+                        {loadingCustomers ? (
+                          <span className="flex items-center gap-2 text-muted-foreground">
+                            <Loader2 className="h-4 w-4 animate-spin" /> Carregando clientes...
+                          </span>
+                        ) : formData.customerName ? (
+                          <span className="truncate">
+                            {formData.customerName}
+                            {formData.customerDocument ? ` — ${formData.customerDocument}` : ''}
+                          </span>
+                        ) : customersError ? (
+                          <span className="text-destructive">Erro ao carregar clientes</span>
+                        ) : customers.length === 0 ? (
+                          <span className="text-muted-foreground">Nenhum cliente cadastrado</span>
+                        ) : (
+                          <span className="text-muted-foreground">Selecione ou digite o nome do cliente</span>
+                        )}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Digite nome ou CPF/CNPJ..." />
+                        <CommandList>
+                          <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
+                          <CommandGroup>
+                            {customers.map((c) => (
+                              <CommandItem
+                                key={c.id}
+                                value={`${c.name} ${c.cpf_cnpj ?? ''}`}
+                                onSelect={() => {
+                                  setFormData({
+                                    ...formData,
+                                    customerId: c.id,
+                                    customerName: c.name,
+                                    customerDocument: c.cpf_cnpj || '',
+                                    shippingAddress: {
+                                      street: c.street || '',
+                                      number: c.number || '',
+                                      complement: c.complement || '',
+                                      neighborhood: c.neighborhood || '',
+                                      city: c.city || '',
+                                      state: c.state || '',
+                                      zipCode: c.zip_code || '',
+                                    },
+                                  });
+                                  setCustomerPopoverOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    'mr-2 h-4 w-4',
+                                    formData.customerId === c.id ? 'opacity-100' : 'opacity-0'
+                                  )}
+                                />
+                                <div className="flex flex-col">
+                                  <span>{c.name}</span>
+                                  {c.cpf_cnpj && (
+                                    <span className="text-xs text-muted-foreground">{c.cpf_cnpj}</span>
+                                  )}
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="space-y-2">
                   <Label>CPF/CNPJ</Label>
