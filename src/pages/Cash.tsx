@@ -69,9 +69,14 @@ export default function Cash() {
           </p>
         </div>
         {canEdit && (
-          <Button onClick={() => setModalOpen(true)} className="gap-2">
-            <Plus className="w-4 h-4" /> Novo Lançamento
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setOrderModalOpen(true)} variant="outline" className="gap-2">
+              <Receipt className="w-4 h-4" /> Receber de Pedido
+            </Button>
+            <Button onClick={() => setModalOpen(true)} className="gap-2">
+              <Plus className="w-4 h-4" /> Novo Lançamento
+            </Button>
+          </div>
         )}
       </div>
 
