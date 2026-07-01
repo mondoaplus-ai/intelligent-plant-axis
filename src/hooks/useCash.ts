@@ -27,6 +27,7 @@ export interface CashEntry {
   id: string;
   cash_account_id: string;
   category_id?: string | null;
+  order_id?: string | null;
   type: 'receita' | 'despesa';
   status: 'pendente' | 'confirmado' | 'cancelado';
   description: string;
