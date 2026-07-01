@@ -197,6 +197,28 @@ export default function Cash() {
         }
         saving={createEntry.isPending}
       />
+
+      <ReceiveFromOrderModal
+        open={orderModalOpen}
+        onClose={() => setOrderModalOpen(false)}
+        orders={orders}
+        paidOrderIds={paidOrderIds}
+        accounts={accounts}
+        categories={categories}
+        onConfirm={(data, order, markDelivered) => {
+          createEntry.mutate(data, {
+            onSuccess: () => {
+              toast.success(`Recebimento do pedido ${order.orderNumber} registrado`);
+              if (markDelivered && order.status !== 'entregue') {
+                updateOrderStatus.mutate({ id: order.id, status: 'entregue' });
+              }
+              setOrderModalOpen(false);
+            },
+            onError: (e: any) => toast.error(e?.message ?? 'Erro ao registrar recebimento'),
+          });
+        }}
+        saving={createEntry.isPending}
+      />
     </motion.div>
   );
 }
