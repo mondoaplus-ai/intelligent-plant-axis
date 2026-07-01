@@ -1,0 +1,2 @@
+ALTER TABLE public.cash_entries ADD COLUMN IF NOT EXISTS order_id uuid REFERENCES public.orders(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS cash_entries_order_id_idx ON public.cash_entries(order_id);
