@@ -421,6 +421,7 @@ export type Database = {
           due_date: string | null
           id: string
           notes: string | null
+          order_id: string | null
           payment_date: string | null
           payment_method: string | null
           production_order_id: string | null
@@ -443,6 +444,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           notes?: string | null
+          order_id?: string | null
           payment_date?: string | null
           payment_method?: string | null
           production_order_id?: string | null
@@ -465,6 +467,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           notes?: string | null
+          order_id?: string | null
           payment_date?: string | null
           payment_method?: string | null
           production_order_id?: string | null
@@ -494,6 +497,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_entries_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
           {
