@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, TrendingUp, TrendingDown, Wallet, Clock, Loader2 } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, Wallet, Clock, Loader2, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,9 +20,11 @@ import {
   CashEntryFilters,
   CreateCashEntry,
 } from '@/hooks/useCash';
+import { useOrders, useUpdateOrderStatus } from '@/hooks/useOrders';
 import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { Order } from '@/types/order';
 
 const fmtBRL = (n: number) =>
   n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -30,14 +32,23 @@ const fmtBRL = (n: number) =>
 export default function Cash() {
   const [filters, setFilters] = useState<CashEntryFilters>({ type: 'all', status: 'all' });
   const [modalOpen, setModalOpen] = useState(false);
+  const [orderModalOpen, setOrderModalOpen] = useState(false);
   const { canEdit, canDelete } = useUserRole();
 
   const { data: accounts = [] } = useCashAccounts();
   const { data: categories = [] } = useCashCategories();
   const { data: entries = [], isLoading } = useCashEntries(filters);
+  const { data: allEntries = [] } = useCashEntries();
+  const { data: orders = [] } = useOrders();
   const summary = useCashSummary();
   const createEntry = useCreateCashEntry();
   const deleteEntry = useDeleteCashEntry();
+  const updateOrderStatus = useUpdateOrderStatus();
+
+  const paidOrderIds = useMemo(
+    () => new Set(allEntries.filter((e) => e.order_id && e.status !== 'cancelado').map((e) => e.order_id!)),
+    [allEntries]
+  );
 
   const handleDelete = (id: string) => {
     if (!canDelete) return toast.error('Sem permissão para excluir');
