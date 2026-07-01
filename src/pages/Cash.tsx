@@ -368,3 +368,174 @@ const CashEntryModal = ({ open, onClose, accounts, categories, onSave, saving }:
     </Dialog>
   );
 };
+
+interface ReceiveOrderProps {
+  open: boolean;
+  onClose: () => void;
+  orders: Order[];
+  paidOrderIds: Set<string>;
+  accounts: any[];
+  categories: any[];
+  onConfirm: (data: CreateCashEntry, order: Order, markDelivered: boolean) => void;
+  saving?: boolean;
+}
+
+const ReceiveFromOrderModal = ({ open, onClose, orders, paidOrderIds, accounts, categories, onConfirm, saving }: ReceiveOrderProps) => {
+  const [orderId, setOrderId] = useState('');
+  const [accountId, setAccountId] = useState('');
+  const [categoryId, setCategoryId] = useState<string>('');
+  const [extraDiscount, setExtraDiscount] = useState(0);
+  const [extraAmount, setExtraAmount] = useState(0);
+  const [paymentMethod, setPaymentMethod] = useState('');
+  const [notes, setNotes] = useState('');
+  const [markDelivered, setMarkDelivered] = useState(true);
+
+  const eligibleOrders = orders.filter(
+    (o) => o.status !== 'cancelado' && !paidOrderIds.has(o.id)
+  );
+
+  const order = orders.find((o) => o.id === orderId);
+  const finalAmount = order ? Math.max(0, order.total - extraDiscount + extraAmount) : 0;
+  const revenueCategories = categories.filter((c) => c.type === 'receita');
+
+  const reset = () => {
+    setOrderId(''); setAccountId(''); setCategoryId(''); setExtraDiscount(0);
+    setExtraAmount(0); setPaymentMethod(''); setNotes(''); setMarkDelivered(true);
+  };
+
+  const handleClose = () => { reset(); onClose(); };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!order) return toast.error('Selecione um pedido');
+    if (!accountId) return toast.error('Selecione a conta de destino');
+    if (finalAmount <= 0) return toast.error('Valor final deve ser positivo');
+
+    const entry: CreateCashEntry = {
+      cash_account_id: accountId,
+      category_id: categoryId || null,
+      order_id: order.id,
+      type: 'receita',
+      status: 'confirmado',
+      description: `Recebimento Pedido ${order.orderNumber} - ${order.customerName}`,
+      amount: finalAmount,
+      date: new Date().toISOString().slice(0, 10),
+      due_date: null,
+      payment_date: new Date().toISOString().slice(0, 10),
+      payment_method: paymentMethod || null,
+      document_number: order.orderNumber,
+      notes: notes || null,
+    };
+    onConfirm(entry, order, markDelivered);
+    reset();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader><DialogTitle>Receber de Pedido</DialogTitle></DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Pedido</Label>
+            <Select value={orderId} onValueChange={setOrderId}>
+              <SelectTrigger>
+                <SelectValue placeholder={eligibleOrders.length ? 'Selecione o pedido' : 'Nenhum pedido em aberto'} />
+              </SelectTrigger>
+              <SelectContent>
+                {eligibleOrders.map((o) => (
+                  <SelectItem key={o.id} value={o.id}>
+                    {o.orderNumber} — {o.customerName} — {fmtBRL(o.total)} ({o.status})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {order && (
+            <Card className="bg-muted/30">
+              <CardContent className="pt-4 space-y-1 text-sm">
+                <div className="flex justify-between"><span className="text-muted-foreground">Cliente</span><span className="font-medium">{order.customerName}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Status</span><Badge variant="outline">{order.status}</Badge></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Itens</span><span>{order.items.length}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Total do pedido</span><span className="font-semibold">{fmtBRL(order.total)}</span></div>
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Conta de destino</Label>
+              <Select value={accountId} onValueChange={setAccountId}>
+                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectContent>
+                  {accounts.map((a) => (<SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Categoria</Label>
+              <Select value={categoryId} onValueChange={setCategoryId}>
+                <SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger>
+                <SelectContent>
+                  {revenueCategories.map((c) => (<SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>Desconto extra (R$)</Label>
+              <Input type="number" step="0.01" min="0" value={extraDiscount}
+                onChange={(e) => setExtraDiscount(parseFloat(e.target.value) || 0)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Acréscimo (R$)</Label>
+              <Input type="number" step="0.01" min="0" value={extraAmount}
+                onChange={(e) => setExtraAmount(parseFloat(e.target.value) || 0)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Forma de pagamento</Label>
+              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                  <SelectItem value="pix">PIX</SelectItem>
+                  <SelectItem value="cartao">Cartão</SelectItem>
+                  <SelectItem value="boleto">Boleto</SelectItem>
+                  <SelectItem value="transferencia">Transferência</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Observações da negociação</Label>
+            <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
+          </div>
+
+          {order && (
+            <div className="flex items-center justify-between bg-primary/10 rounded-lg p-3">
+              <span className="text-sm font-medium">Valor a receber</span>
+              <span className="text-2xl font-bold text-primary">{fmtBRL(finalAmount)}</span>
+            </div>
+          )}
+
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={markDelivered} onChange={(e) => setMarkDelivered(e.target.checked)} />
+            Marcar pedido como entregue após receber
+          </label>
+
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={handleClose}>Cancelar</Button>
+            <Button type="submit" disabled={saving || !order}>
+              {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Confirmar Recebimento
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
